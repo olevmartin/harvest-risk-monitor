@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense, useState } from "react";
+import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { AlertTriangle, MapPin, Search, Package, Truck, Leaf, Loader2, CheckCircle2, ArrowLeft, RefreshCw } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -38,16 +38,18 @@ const kpis = [
 
 const DEFICIT_TONS = 450;
 
+const SupplierMap = lazy(() => import("@/components/SupplierMap"));
+
 const initialSuppliers = [
-  { name: "AgroBalt Sp. z o.o.", country: "Poland", region: "Greater Poland", capacity: 220, pricePerTon: 385, leadTime: "4 days" },
-  { name: "Vidzemes Graudi SIA", country: "Latvia", region: "Vidzeme", capacity: 150, pricePerTon: 410, leadTime: "3 days" },
-  { name: "Saaremaa Agro OÜ", country: "Estonia", region: "Saaremaa", capacity: 120, pricePerTon: 425, leadTime: "2 days" },
+  { name: "AgroBalt Sp. z o.o.", country: "Poland", region: "Greater Poland", capacity: 220, pricePerTon: 385, leadTime: "4 days", lat: 52.4, lng: 16.9 },
+  { name: "Vidzemes Graudi SIA", country: "Latvia", region: "Vidzeme", capacity: 150, pricePerTon: 410, leadTime: "3 days", lat: 57.42, lng: 25.3 },
+  { name: "Saaremaa Agro OÜ", country: "Estonia", region: "Saaremaa", capacity: 120, pricePerTon: 425, leadTime: "2 days", lat: 58.35, lng: 22.5 },
 ];
 
 const replacementSuppliers = [
-  { name: "Podlasie Zboża Sp. z o.o.", country: "Poland", region: "Podlaskie", capacity: 180, pricePerTon: 398, leadTime: "5 days" },
-  { name: "Zemgale Agro SIA", country: "Latvia", region: "Zemgale", capacity: 160, pricePerTon: 405, leadTime: "3 days" },
-  { name: "Tartu Teravilja OÜ", country: "Estonia", region: "Tartumaa", capacity: 140, pricePerTon: 418, leadTime: "2 days" },
+  { name: "Podlasie Zboża Sp. z o.o.", country: "Poland", region: "Podlaskie", capacity: 180, pricePerTon: 398, leadTime: "5 days", lat: 53.13, lng: 23.16 },
+  { name: "Zemgale Agro SIA", country: "Latvia", region: "Zemgale", capacity: 160, pricePerTon: 405, leadTime: "3 days", lat: 56.65, lng: 23.71 },
+  { name: "Tartu Teravilja OÜ", country: "Estonia", region: "Tartumaa", capacity: 140, pricePerTon: 418, leadTime: "2 days", lat: 58.38, lng: 26.72 },
 ];
 
 const formatEur = (n: number) => `€${n.toLocaleString("en-US")}`;
@@ -74,7 +76,9 @@ function Index() {
     setLoadingCard(index);
     setTimeout(() => {
       setSuppliers((prev) =>
-        prev.map((s, i) => (i === index ? replacementSuppliers[(swapsUsed + i) % replacementSuppliers.length] : s)),
+        prev.map((s, i) =>
+          i === index ? replacementSuppliers[(swapsUsed + i) % replacementSuppliers.length] ?? s : s,
+        ),
       );
       setSwapsUsed((n) => n + 1);
       setLoadingCard(null);
@@ -196,9 +200,26 @@ function Index() {
         <div className="grid gap-6 lg:grid-cols-5">
           <section className="rounded-lg border bg-card p-5 lg:col-span-3">
             <h2 className="mb-4 font-semibold text-foreground">Supplier network map</h2>
-            <div className="flex h-[440px] flex-col items-center justify-center gap-2 rounded-md border border-dashed bg-muted text-muted-foreground">
-              <MapPin className="h-8 w-8" />
-              <span className="text-sm">Map placeholder</span>
+            <div className="h-[440px] overflow-hidden rounded-md border">
+              <ClientOnly
+                fallback={
+                  <div className="flex h-full flex-col items-center justify-center gap-2 bg-muted text-muted-foreground">
+                    <MapPin className="h-8 w-8" />
+                    <span className="text-sm">Loading map…</span>
+                  </div>
+                }
+              >
+                <Suspense
+                  fallback={
+                    <div className="flex h-full flex-col items-center justify-center gap-2 bg-muted text-muted-foreground">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <span className="text-sm">Loading map…</span>
+                    </div>
+                  }
+                >
+                  <SupplierMap showRiskZone={state !== "resolved"} suppliers={suppliers} />
+                </Suspense>
+              </ClientOnly>
             </div>
           </section>
 
