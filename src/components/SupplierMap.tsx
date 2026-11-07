@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { latLng, latLngBounds } from "leaflet";
-import { MapContainer, TileLayer, CircleMarker, Polygon, Polyline, Popup, useMap } from "react-leaflet";
+import { MapContainer, CircleMarker, Polygon, Polyline, Popup, useMap } from "react-leaflet";
 import { type MapSupplier } from "@/lib/climate-forecast";
 import { getWeatherForecast, getRiskTimeline, getForecastLabel, SPAIN_OUTLINE, type RiskId } from "@/lib/risk-scenarios";
 import { RadarLayer } from "@/components/RadarLayer";
+import EnterpriseBasemap from "@/components/EnterpriseBasemap";
 import type { IntelligenceAlert } from "@/lib/apetit-intelligence";
 
 function RiskViewport({ riskId, suppliers }: { riskId: RiskId; suppliers: MapSupplier[] }) {
@@ -25,8 +26,8 @@ function RiskViewport({ riskId, suppliers }: { riskId: RiskId; suppliers: MapSup
 export default function SupplierMap({ day, riskId, suppliers, alert, onRiskClick }: { day: number; riskId: RiskId; suppliers: MapSupplier[]; alert?: IntelligenceAlert; onRiskClick?: () => void }) {
   const freightIncrease = 24 + day * 3;
   return (
-    <MapContainer center={[60.45, 22.27]} zoom={6} zoomAnimation={false} fadeAnimation={false} scrollWheelZoom className="h-full w-full rounded-md">
-      <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <MapContainer center={[60.45, 22.27]} zoom={6} zoomAnimation={false} fadeAnimation={false} scrollWheelZoom className="enterprise-map h-full w-full rounded-md">
+      <EnterpriseBasemap />
       {alert?.overlay === "farms" ? <FarmViewport location={alert.location} /> : <RiskViewport riskId={riskId} suppliers={suppliers} />}
       {alert?.overlay !== "farms" && <RadarLayer riskId={riskId} day={day} />}
       {riskId === "economic" && alert?.overlay !== "farms" && <>

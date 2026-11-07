@@ -73,7 +73,7 @@ function Workspace({ alert }: { alert: IntelligenceAlert }) {
       <div className="min-w-0 space-y-5 p-5 sm:p-7">
         <div className="grid grid-cols-3 gap-3 border-b pb-5"><Metric label="Partner farms affected" value={String(alert.farmers)} /><Metric label="Potential risk exposure" value={money(impact.unresolved)} critical /><Metric label="Affected crops" value={String(alert.crops.length)} /></div>
         <section aria-label="Risk map"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="text-sm font-bold">Predictive Risk Navigator</h2><Button variant="ghost" size="sm" onClick={() => setPanelOpen(true)} className="h-7 px-2 text-[10px]"><Icon className="h-3 w-3" />{alert.category} analysis<ArrowUpRight className="h-3 w-3" /></Button></div>
-          <div className="relative h-[390px] overflow-hidden rounded-md border sm:h-[440px]">
+          <div className="map-frame relative h-[390px] overflow-hidden rounded-md border sm:h-[440px]">
             <ClientOnly fallback={<MapLoading />}><Suspense fallback={<MapLoading />}><SupplierMap riskId={alert.mapRisk} day={day} suppliers={emptySuppliers} alert={alert} onRiskClick={() => setPanelOpen(true)} /></Suspense></ClientOnly>
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground"><span className="flex items-center gap-2"><span className={`h-2 w-12 rounded-sm ${alert.overlay === "radar" ? alert.mapRisk === "heatwave" ? "radar-heat-scale" : "radar-rain-scale" : "bg-critical"}`} />{alert.overlay === "radar" ? alert.mapRisk === "heatwave" ? "Heat / drought intensity" : "Rainfall intensity" : "Affected farms / routes"}</span><span>Simulated projection · Not live data</span></div>
