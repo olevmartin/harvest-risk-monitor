@@ -12,10 +12,10 @@ export interface RiskScenario {
   impact: string;
   metricLabel: string;
   metricValue: string;
-  chartTitle: string;
-  chartUnit: string;
-  historical: number[];
-  predicted: number[];
+  baselinePerTon: number;
+  stockoutCost: number;
+  logisticsPremium: number;
+  safetyReason: string;
   suppliers: SourcingSupplier[];
   replacements: SourcingSupplier[];
 }
@@ -23,16 +23,18 @@ export interface RiskScenario {
 export const riskScenarios: RiskScenario[] = [
   {
     id: "heatwave", title: "Heatwave & Drought in Finland", country: "Finland", type: "Weather Risk", severity: "Critical",
-    summary: "Upcoming 10-day heatwave will reduce pea yield by 30% in Southwest Finland. Deficit: 450 tons.",
-    impact: "−30% yield", metricLabel: "Forecast pea supply", metricValue: "1,050 t", chartTitle: "Pea yield outlook", chartUnit: "tons",
-    historical: [1500, 1480, 1520, 1550, 1530, 1510, 1540], predicted: [1500, 1470, 1440, 1300, 1150, 1070, 1060],
+    summary: "Heatwave and drought threaten Southwest Finland's pea harvests over the next six months. Expected yield reduction: 30%. Deficit: 450 tons.",
+    impact: "−30% yield", metricLabel: "Forecast pea supply", metricValue: "1,050 t",
+    baselinePerTon: 390, stockoutCost: 1_250_000, logisticsPremium: 8_000,
+    safetyReason: "Outside Finland's drought footprint throughout the six-month forecast",
     suppliers: initialSuppliers, replacements: replacementSuppliers,
   },
   {
     id: "rainfall", title: "Heavy Rainfall & Flooding in Poland", country: "Poland", type: "Weather Risk", severity: "High",
     summary: "Persistent rainfall threatens central Polish harvests and road access. 450 tons of pea supply require alternative sourcing.",
-    impact: "4-day delays", metricLabel: "At-risk shipment volume", metricValue: "450 t", chartTitle: "Delivery lead-time outlook", chartUnit: "days",
-    historical: [3, 3, 3, 4, 3, 3, 3], predicted: [3, 4, 4, 5, 6, 7, 7],
+    impact: "4-day delays", metricLabel: "At-risk shipment volume", metricValue: "450 t",
+    baselinePerTon: 380, stockoutCost: 860_000, logisticsPremium: 12_000,
+    safetyReason: "Outside Poland's storm footprint; logistics bypass flood-exposed Polish roads",
     suppliers: [
       { name: "Elbe Harvest GmbH", country: "Germany", region: "Lower Saxony", capacity: 200, pricePerTon: 402, leadTime: "3 days", lat: 53.1, lng: 9.1 },
       { name: "Jutland Growers ApS", country: "Denmark", region: "Central Jutland", capacity: 150, pricePerTon: 430, leadTime: "4 days", lat: 56.2, lng: 9.5 },
@@ -47,8 +49,9 @@ export const riskScenarios: RiskScenario[] = [
   {
     id: "economic", title: "Inflation & Transport Cost Spike in Spain", country: "Spain", type: "Economic Risk", severity: "High",
     summary: "Rising fuel and transport costs are increasing Spanish sourcing expenses. Reroute 450 tons to suppliers outside Spain.",
-    impact: "+24% freight", metricLabel: "Forecast freight index", metricValue: "124", chartTitle: "Transport cost outlook", chartUnit: "index",
-    historical: [100, 101, 100, 102, 101, 100, 101], predicted: [100, 104, 108, 113, 118, 122, 124],
+    impact: "+24% freight", metricLabel: "Forecast freight index", metricValue: "124",
+    baselinePerTon: 360, stockoutCost: 620_000, logisticsPremium: 6_000,
+    safetyReason: "Non-Spanish sourcing and regional logistics avoid Spain's high-cost corridors",
     suppliers: [
       { name: "Loire Récoltes SAS", country: "France", region: "Loire Valley", capacity: 210, pricePerTon: 390, leadTime: "3 days", lat: 47.4, lng: 0.7 },
       { name: "Alentejo Verde Lda", country: "Portugal", region: "Alentejo", capacity: 160, pricePerTon: 375, leadTime: "2 days", lat: 38.57, lng: -7.91 },
@@ -62,9 +65,32 @@ export const riskScenarios: RiskScenario[] = [
   },
 ];
 
+export function getRiskTimeline(id: RiskId) {
+  return id === "rainfall"
+    ? { max: 14, unit: "day" as const, horizon: "Next 14 Days", endLabel: "Day 14" }
+    : { max: 6, unit: "month" as const, horizon: "Next 6 Months", endLabel: "Month 6" };
+}
+
+export function getForecastLabel(id: RiskId, value: number) {
+  if (value === 0) return "Today";
+  return `${getRiskTimeline(id).unit === "day" ? "Day" : "Month"} ${value}`;
+}
+
+export function getFinancialImpact(risk: RiskScenario, suppliers: SourcingSupplier[], period: number) {
+  const progress = Math.max(0, Math.min(1, period / getRiskTimeline(risk.id).max));
+  const baseline = risk.baselinePerTon * 450;
+  const procurement = allocateReplacement(suppliers).reduce((total, supplier) => total + supplier.subtotal, 0);
+  const logistics = Math.round(risk.logisticsPremium * (1 + progress * 0.25));
+  const alternativeExtra = Math.max(0, procurement - baseline) + logistics;
+  const unresolved = Math.round(risk.stockoutCost * (0.65 + progress * 0.35));
+  const avoidedLoss = unresolved - alternativeExtra;
+  return { baseline, procurement, logistics, alternativeExtra, unresolved, avoidedLoss,
+    roiPercent: alternativeExtra > 0 ? Math.round(avoidedLoss / alternativeExtra * 100) : 0 };
+}
+
 export function getWeatherForecast(id: RiskId, day: number) {
   if (id === "heatwave") return getHeatwaveForecast(day);
-  const clamped = Math.max(0, Math.min(10, day));
+  const clamped = Math.max(0, Math.min(14, day));
   return { center: [52.1 + clamped * 0.035, 20.5 + clamped * 0.05] as [number, number], radius: 160_000 + clamped * 5_000 };
 }
 

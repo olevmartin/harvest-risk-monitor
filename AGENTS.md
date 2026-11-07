@@ -34,3 +34,4 @@ use the editor.
 - Define risk scenarios centrally, and key scenario views by risk ID to cancel pending supplier searches and reset selections when switching alerts.
 - Render mock weather as deterministic georeferenced canvas GridLayer tiles with a bounded forecast footprint; supplier safety tests validate every scenario against that same footprint.
 - Allocate replacement quantities up to the required deficit before calculating costs; spare supplier capacity is not charged.
+- Keep risk-specific horizon units and financial projections in the browser-safe scenario module so timelines, maps, ROI charts, and safety tests share a single source of truth; alternative logistics bars represent incremental costs, not full procurement spend.

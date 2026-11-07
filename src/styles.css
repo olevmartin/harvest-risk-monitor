@@ -48,6 +48,7 @@
   --color-critical-foreground: var(--critical-foreground);
   --color-critical-soft: var(--critical-soft);
   --color-safe-supplier: var(--safe-supplier);
+  --color-financial-baseline: var(--financial-baseline);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
@@ -72,6 +73,7 @@
   --critical-foreground: oklch(0.99 0 0);
   --critical-soft: oklch(0.97 0.02 20);
   --safe-supplier: oklch(0.55 0.16 150);
+  --financial-baseline: oklch(0.62 0.015 250);
   --radar-heat-low: oklch(0.84 0.18 80);
   --radar-heat-mid: oklch(0.71 0.21 48);
   --radar-heat-high: oklch(0.53 0.24 27);
@@ -113,6 +115,7 @@
 }
 
 .dark {
+  --financial-baseline: oklch(0.72 0.015 250);
   --safe-supplier: oklch(0.72 0.17 150);
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
@@ -165,7 +168,7 @@
   fill: var(--critical);
 }
 
-.leaflet-overlay-pane .expensive-route { stroke: var(--radar-heat-mid); }
+.leaflet-overlay-pane .expensive-route { stroke: var(--critical); }
 .radar-heat-scale { background: linear-gradient(to right, var(--radar-heat-low), var(--radar-heat-mid), var(--radar-heat-high)); }
 .radar-rain-scale { background: linear-gradient(to right, var(--radar-rain-low), var(--radar-rain-mid), var(--radar-rain-high)); }
 

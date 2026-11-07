@@ -7,13 +7,13 @@ export interface MapSupplier {
   lng: number;
 }
 
-export const FORECAST_LAST_DAY = 10;
+export const HEATWAVE_LAST_MONTH = 6;
 
-export function getHeatwaveForecast(day: number) {
-  const forecastDay = Math.max(0, Math.min(FORECAST_LAST_DAY, day));
+export function getHeatwaveForecast(month: number) {
+  const forecastMonth = Math.max(0, Math.min(HEATWAVE_LAST_MONTH, month));
   return {
-    center: [60.8 + forecastDay * 0.04, 22.5 + forecastDay * 0.065] as [number, number],
-    radius: 130_000 + forecastDay * 5_000,
+    center: [60.8 + forecastMonth * 0.12, 22.5 + forecastMonth * 0.14] as [number, number],
+    radius: 180_000 + forecastMonth * 12_000,
   };
 }
 
