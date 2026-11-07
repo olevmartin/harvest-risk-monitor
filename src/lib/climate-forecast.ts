@@ -1,3 +1,5 @@
+import { APETIT_BASELINE } from "@/lib/apetit-baseline";
+
 export interface MapSupplier {
   name: string;
   region: string;
@@ -20,7 +22,7 @@ export function getHeatwaveForecast(day: number) {
   const { start, end } = HEATWAVE_WINDOW;
   const t = Math.max(0, Math.min(1, (day - start) / (end - start)));
   const active = day >= start && day <= end;
-  const center: [number, number] = [59.9 + t * 1.4, 18.3 + t * 11.2];
+  const center: [number, number] = [APETIT_BASELINE.contractFarm[0] + (t - 1 / 3) * 1.4, APETIT_BASELINE.contractFarm[1] + (t - 1 / 3) * 11.2];
   // Ramp up to a peak near Turku (t≈0.35), then slowly dissipate eastward.
   const intensity = !active ? 0 : t < 0.35 ? 0.35 + (t / 0.35) * 0.65 : Math.max(0.15, 1 - ((t - 0.35) / 0.65) * 0.85);
   return { center, radius: active ? 90_000 + intensity * 40_000 : 0, intensity, active };
@@ -35,14 +37,6 @@ export function distanceMeters(a: [number, number], b: [number, number]) {
   return 6_371_000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
 }
 
-export const initialSuppliers = [
-  { name: "AgroBalt Sp. z o.o.", country: "Poland", region: "Greater Poland", capacity: 220, pricePerTon: 385, leadTime: "4 days", lat: 52.4, lng: 16.9 },
-  { name: "Vidzemes Graudi SIA", country: "Latvia", region: "Vidzeme", capacity: 150, pricePerTon: 410, leadTime: "3 days", lat: 57.42, lng: 25.3 },
-  { name: "Saaremaa Agro OÜ", country: "Estonia", region: "Saaremaa", capacity: 120, pricePerTon: 425, leadTime: "2 days", lat: 58.35, lng: 22.5 },
-];
-
-export const replacementSuppliers = [
-  { name: "Podlasie Zboża Sp. z o.o.", country: "Poland", region: "Podlaskie", capacity: 180, pricePerTon: 398, leadTime: "5 days", lat: 53.13, lng: 23.16 },
-  { name: "Zemgale Agro SIA", country: "Latvia", region: "Zemgale", capacity: 160, pricePerTon: 405, leadTime: "3 days", lat: 56.65, lng: 23.71 },
-  { name: "Tartu Teravilja OÜ", country: "Estonia", region: "Tartumaa", capacity: 140, pricePerTon: 418, leadTime: "2 days", lat: 58.38, lng: 26.72 },
-];
+// Supplier countries are supplied, but exact sites/capacities/prices are not: do not fabricate map markers.
+export const initialSuppliers: (MapSupplier & { pricePerTon: number; leadTime: string })[] = [];
+export const replacementSuppliers: (MapSupplier & { pricePerTon: number; leadTime: string })[] = [];

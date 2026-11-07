@@ -1,5 +1,9 @@
 # Roadmap
 
+- [x] Replace unsupported mock records with supplied Säkylä corporate baselines and interventions.
+- [x] Preserve map movement and controls; show missing financial values and scientific provenance honestly.
+- [x] Test exact volume, emissions, water and coordinates; verify draft flow and mobile layout.
+
 - [x] Adapt dashboard to Apetit with six crop filters, categorized alerts, and map-driven analysis.
 - [x] Add explicitly simulated source evidence and farmer-first actions with benefit and ROI estimates.
 - [x] Verify filtering, map selection, timelines, actions, and desktop/mobile layouts.

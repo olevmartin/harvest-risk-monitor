@@ -1,4 +1,4 @@
-import { getHeatwaveForecast, initialSuppliers, replacementSuppliers, type MapSupplier } from "@/lib/climate-forecast";
+import { getHeatwaveForecast, type MapSupplier } from "@/lib/climate-forecast";
 
 export type RiskId = "heatwave" | "rainfall" | "economic";
 export type SourcingSupplier = MapSupplier & { pricePerTon: number; leadTime: string };
@@ -20,50 +20,8 @@ export interface RiskScenario {
   replacements: SourcingSupplier[];
 }
 
-export const riskScenarios: RiskScenario[] = [
-  {
-    id: "heatwave", title: "Heatwave & Drought in Finland", country: "Finland", type: "Weather Risk", severity: "Critical",
-    summary: "Heatwave and drought threaten Southwest Finland's pea harvests over the next six months. Expected yield reduction: 30%. Deficit: 450 tons.",
-    impact: "−30% yield", metricLabel: "Forecast pea supply", metricValue: "1,050 t",
-    baselinePerTon: 390, stockoutCost: 1_250_000, logisticsPremium: 8_000,
-    safetyReason: "Outside Finland's drought footprint throughout the six-month forecast",
-    suppliers: initialSuppliers, replacements: replacementSuppliers,
-  },
-  {
-    id: "rainfall", title: "Heavy Rainfall & Flooding in Poland", country: "Poland", type: "Weather Risk", severity: "High",
-    summary: "Persistent rainfall threatens central Polish harvests and road access. 450 tons of pea supply require alternative sourcing.",
-    impact: "4-day delays", metricLabel: "At-risk shipment volume", metricValue: "450 t",
-    baselinePerTon: 380, stockoutCost: 860_000, logisticsPremium: 12_000,
-    safetyReason: "Outside Poland's storm footprint; logistics bypass flood-exposed Polish roads",
-    suppliers: [
-      { name: "Elbe Harvest GmbH", country: "Germany", region: "Lower Saxony", capacity: 200, pricePerTon: 402, leadTime: "3 days", lat: 53.1, lng: 9.1 },
-      { name: "Jutland Growers ApS", country: "Denmark", region: "Central Jutland", capacity: 150, pricePerTon: 430, leadTime: "4 days", lat: 56.2, lng: 9.5 },
-      { name: "Baltic Fields UAB", country: "Lithuania", region: "Kaunas", capacity: 150, pricePerTon: 395, leadTime: "2 days", lat: 54.9, lng: 23.9 },
-    ],
-    replacements: [
-      { name: "Weser Agrar GmbH", country: "Germany", region: "Bremen", capacity: 220, pricePerTon: 410, leadTime: "3 days", lat: 53.08, lng: 8.8 },
-      { name: "Fyn Produce ApS", country: "Denmark", region: "Funen", capacity: 170, pricePerTon: 422, leadTime: "4 days", lat: 55.4, lng: 10.4 },
-      { name: "Klaipėda Agro UAB", country: "Lithuania", region: "Klaipėda", capacity: 140, pricePerTon: 401, leadTime: "3 days", lat: 55.7, lng: 21.1 },
-    ],
-  },
-  {
-    id: "economic", title: "Inflation & Transport Cost Spike in Spain", country: "Spain", type: "Economic Risk", severity: "High",
-    summary: "Rising fuel and transport costs are increasing Spanish sourcing expenses. Reroute 450 tons to suppliers outside Spain.",
-    impact: "+24% freight", metricLabel: "Forecast freight index", metricValue: "124",
-    baselinePerTon: 360, stockoutCost: 620_000, logisticsPremium: 6_000,
-    safetyReason: "Non-Spanish sourcing and regional logistics avoid Spain's high-cost corridors",
-    suppliers: [
-      { name: "Loire Récoltes SAS", country: "France", region: "Loire Valley", capacity: 210, pricePerTon: 390, leadTime: "3 days", lat: 47.4, lng: 0.7 },
-      { name: "Alentejo Verde Lda", country: "Portugal", region: "Alentejo", capacity: 160, pricePerTon: 375, leadTime: "2 days", lat: 38.57, lng: -7.91 },
-      { name: "Po Valley Cooperativa", country: "Italy", region: "Emilia-Romagna", capacity: 140, pricePerTon: 415, leadTime: "4 days", lat: 44.5, lng: 11.3 },
-    ],
-    replacements: [
-      { name: "Bretagne Légumes SAS", country: "France", region: "Brittany", capacity: 220, pricePerTon: 398, leadTime: "3 days", lat: 48.1, lng: -1.7 },
-      { name: "Ribatejo Colheitas Lda", country: "Portugal", region: "Ribatejo", capacity: 170, pricePerTon: 382, leadTime: "2 days", lat: 39.2, lng: -8.7 },
-      { name: "Piemonte Agro SRL", country: "Italy", region: "Piedmont", capacity: 160, pricePerTon: 408, leadTime: "4 days", lat: 45.07, lng: 7.69 },
-    ],
-  },
-];
+// Weather rendering remains available for all modes; only the supplied Säkylä dataset is active.
+export const riskScenarios: RiskScenario[] = [];
 
 export function getRiskTimeline(id: RiskId) {
   if (id === "rainfall") return { max: 14, unit: "day" as const, horizon: "Next 14 Days", endLabel: "Day 14" };
@@ -74,18 +32,6 @@ export function getRiskTimeline(id: RiskId) {
 export function getForecastLabel(id: RiskId, value: number) {
   if (value === 0) return "Today";
   return `${getRiskTimeline(id).unit === "day" ? "Day" : "Month"} ${value}`;
-}
-
-export function getFinancialImpact(risk: RiskScenario, suppliers: SourcingSupplier[], period: number) {
-  const progress = Math.max(0, Math.min(1, period / getRiskTimeline(risk.id).max));
-  const baseline = risk.baselinePerTon * 450;
-  const procurement = allocateReplacement(suppliers).reduce((total, supplier) => total + supplier.subtotal, 0);
-  const logistics = Math.round(risk.logisticsPremium * (1 + progress * 0.25));
-  const alternativeExtra = Math.max(0, procurement - baseline) + logistics;
-  const unresolved = Math.round(risk.stockoutCost * (0.65 + progress * 0.35));
-  const avoidedLoss = unresolved - alternativeExtra;
-  return { baseline, procurement, logistics, alternativeExtra, unresolved, avoidedLoss,
-    roiPercent: alternativeExtra > 0 ? Math.round(avoidedLoss / alternativeExtra * 100) : 0 };
 }
 
 export function getWeatherForecast(id: RiskId, day: number) {
@@ -108,11 +54,3 @@ export function pointInSpain(lat: number, lng: number) {
   return inside;
 }
 
-export function allocateReplacement(suppliers: SourcingSupplier[], requiredTons = 450) {
-  let remaining = requiredTons;
-  return suppliers.map((supplier) => {
-    const allocatedTons = Math.min(remaining, supplier.capacity);
-    remaining -= allocatedTons;
-    return { ...supplier, allocatedTons, subtotal: allocatedTons * supplier.pricePerTon };
-  });
-}
