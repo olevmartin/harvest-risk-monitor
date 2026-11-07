@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { latLng, latLngBounds } from "leaflet";
 import { MapContainer, CircleMarker, Polygon, Polyline, Popup, useMap } from "react-leaflet";
-import { type MapSupplier } from "@/lib/climate-forecast";
+import { type MapSupplier, HEATWAVE_WINDOW } from "@/lib/climate-forecast";
+import { HeatwaveOverlay } from "@/components/HeatwaveOverlay";
 import { getWeatherForecast, getRiskTimeline, getForecastLabel, SPAIN_OUTLINE, type RiskId } from "@/lib/risk-scenarios";
 import { RadarLayer } from "@/components/RadarLayer";
 import EnterpriseBasemap from "@/components/EnterpriseBasemap";
@@ -11,9 +12,10 @@ function RiskViewport({ riskId, suppliers }: { riskId: RiskId; suppliers: MapSup
   const map = useMap();
   useEffect(() => {
     const bounds = riskId === "economic" ? latLngBounds(SPAIN_OUTLINE) : latLngBounds([]);
-    if (riskId !== "economic") for (const day of [0, getRiskTimeline(riskId).max]) {
+    const sampleDays = riskId === "heatwave" ? [HEATWAVE_WINDOW.start, HEATWAVE_WINDOW.end] : [0, getRiskTimeline(riskId).max];
+    if (riskId !== "economic") for (const day of sampleDays) {
       const forecast = getWeatherForecast(riskId, day);
-      bounds.extend(latLng(forecast.center).toBounds(forecast.radius * 2.4));
+      bounds.extend(latLng(forecast.center).toBounds(Math.max(forecast.radius, 100_000) * 2.4));
     }
     for (const supplier of suppliers) bounds.extend([supplier.lat, supplier.lng]);
     if (riskId === "economic") bounds.extend([48.85, 2.35]);
@@ -29,7 +31,7 @@ export default function SupplierMap({ day, riskId, suppliers, alert, onRiskClick
     <MapContainer center={[60.45, 22.27]} zoom={6} zoomAnimation={false} fadeAnimation={false} scrollWheelZoom className="enterprise-map h-full w-full rounded-md">
       <EnterpriseBasemap />
       {alert?.overlay === "farms" ? <FarmViewport location={alert.location} /> : <RiskViewport riskId={riskId} suppliers={suppliers} />}
-      {alert?.overlay !== "farms" && <RadarLayer riskId={riskId} day={day} />}
+      {alert?.overlay !== "farms" && (riskId === "heatwave" ? <HeatwaveOverlay day={day} /> : <RadarLayer riskId={riskId} day={day} />)}
       {riskId === "economic" && alert?.overlay !== "farms" && <>
         <Polygon positions={SPAIN_OUTLINE} pathOptions={{ className: "economic-risk-zone", fillOpacity: 0.16 + day * 0.025, weight: 2 }}><Popup>Spain · Inflation and transport cost exposure</Popup></Polygon>
         <Polyline positions={[[40.42,-3.7],[43.3,-1.98],[48.85,2.35]]} pathOptions={{ className: "disrupted-route", weight: 4 + day * 0.5, dashArray: "10 12" }}><Popup>Madrid → Paris · Disrupted corridor · +{freightIncrease}% freight cost · {getForecastLabel(riskId, day)} (mock)</Popup></Polyline>

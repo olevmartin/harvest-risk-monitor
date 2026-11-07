@@ -9,7 +9,7 @@ export function ForecastTimeline({ riskId, day, onDayChange }: { riskId: RiskId;
   const [playing, setPlaying] = useState(false);
   useEffect(() => {
     if (!playing) return;
-    const interval = setInterval(() => onDayChange((day + 1) % (timeline.max + 1)), 900);
+    const interval = setInterval(() => onDayChange((day + 1) % (timeline.max + 1)), timeline.max > 30 ? 220 : 900);
     return () => clearInterval(interval);
   }, [playing, day, timeline.max, onDayChange]);
   return (

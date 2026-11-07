@@ -77,6 +77,7 @@
   --critical-soft: oklch(0.97 0.02 20);
   --safe-supplier: oklch(0.55 0.16 150);
   --financial-baseline: oklch(0.62 0.015 250);
+  --radar-heat-fringe: oklch(0.78 0.19 140);
   --radar-heat-low: oklch(0.84 0.18 80);
   --radar-heat-mid: oklch(0.71 0.21 48);
   --radar-heat-high: oklch(0.53 0.24 27);

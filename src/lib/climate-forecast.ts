@@ -7,14 +7,23 @@ export interface MapSupplier {
   lng: number;
 }
 
-export const HEATWAVE_LAST_MONTH = 6;
+/** Six-month horizon expressed in days so a short heat spike can be scrubbed day by day. */
+export const HEATWAVE_LAST_DAY = 180;
+/** The anomaly only exists for a 10-day window; the map is clear outside it. */
+export const HEATWAVE_WINDOW = { start: 8, end: 17 } as const;
 
-export function getHeatwaveForecast(month: number) {
-  const forecastMonth = Math.max(0, Math.min(HEATWAVE_LAST_MONTH, month));
-  return {
-    center: [60.8 + forecastMonth * 0.12, 22.5 + forecastMonth * 0.14] as [number, number],
-    radius: 180_000 + forecastMonth * 12_000,
-  };
+/**
+ * Front spawns over the Baltic Sea (west), sweeps over Turku, peaks, then fades moving east.
+ * intensity is 0 outside the window (radius 0 = nothing drawn).
+ */
+export function getHeatwaveForecast(day: number) {
+  const { start, end } = HEATWAVE_WINDOW;
+  const t = Math.max(0, Math.min(1, (day - start) / (end - start)));
+  const active = day >= start && day <= end;
+  const center: [number, number] = [59.9 + t * 1.4, 18.3 + t * 11.2];
+  // Ramp up to a peak near Turku (t≈0.35), then slowly dissipate eastward.
+  const intensity = !active ? 0 : t < 0.35 ? 0.35 + (t / 0.35) * 0.65 : Math.max(0.15, 1 - ((t - 0.35) / 0.65) * 0.85);
+  return { center, radius: active ? 90_000 + intensity * 40_000 : 0, intensity, active };
 }
 
 export function distanceMeters(a: [number, number], b: [number, number]) {

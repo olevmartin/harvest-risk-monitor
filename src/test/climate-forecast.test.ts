@@ -1,30 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { distanceMeters, HEATWAVE_LAST_MONTH, getHeatwaveForecast, initialSuppliers, replacementSuppliers } from "@/lib/climate-forecast";
+import { distanceMeters, HEATWAVE_LAST_DAY, HEATWAVE_WINDOW, getHeatwaveForecast, initialSuppliers, replacementSuppliers } from "@/lib/climate-forecast";
 
 describe("Climate forecast", () => {
-  it("covers Today through Month 6", () => {
-    expect(HEATWAVE_LAST_MONTH).toBe(6);
-    expect(getHeatwaveForecast(-1)).toEqual(getHeatwaveForecast(0));
-    expect(getHeatwaveForecast(7)).toEqual(getHeatwaveForecast(6));
+  it("only shows the heatwave during its 10-day window", () => {
+    expect(HEATWAVE_WINDOW.end - HEATWAVE_WINDOW.start + 1).toBe(10);
+    expect(getHeatwaveForecast(0).active).toBe(false);
+    expect(getHeatwaveForecast(HEATWAVE_WINDOW.start - 1).radius).toBe(0);
+    expect(getHeatwaveForecast(HEATWAVE_WINDOW.end + 1).active).toBe(false);
+    expect(getHeatwaveForecast(HEATWAVE_LAST_DAY).active).toBe(false);
+    expect(getHeatwaveForecast(12).active).toBe(true);
   });
 
-  it("moves and expands the risk zone as the timeline advances", () => {
-    const today = getHeatwaveForecast(0);
-    for (let day = 1; day <= 6; day++) {
-      const previous = getHeatwaveForecast(day - 1);
-      const next = getHeatwaveForecast(day);
-      expect(next.radius).toBeGreaterThan(previous.radius);
-      expect(distanceMeters(previous.center, next.center)).toBeGreaterThan(0);
-    }
-    expect(distanceMeters(today.center, getHeatwaveForecast(6).center)).toBeGreaterThan(0);
+  it("moves west to east, peaks near Turku, then fades", () => {
+    const first = getHeatwaveForecast(HEATWAVE_WINDOW.start);
+    const last = getHeatwaveForecast(HEATWAVE_WINDOW.end);
+    expect(first.center[1]).toBeLessThan(21); // Baltic Sea
+    expect(last.center[1]).toBeGreaterThan(27); // eastern Finland
+    const samples = Array.from({ length: 10 }, (_, i) => getHeatwaveForecast(HEATWAVE_WINDOW.start + i));
+    const peak = samples.reduce((a, b) => (b.intensity > a.intensity ? b : a));
+    expect(Math.abs(peak.center[1] - 22.27)).toBeLessThan(2);
+    expect(last.intensity).toBeLessThan(peak.intensity / 2);
   });
 
-  it.each([...initialSuppliers, ...replacementSuppliers])("keeps $name strictly outside the red zone for the entire six-month forecast", (supplier) => {
-    // Sub-day samples also cover intermediate positions, not just slider stops.
-    for (let sample = 0; sample <= 1000; sample++) {
-      const risk = getHeatwaveForecast(sample * 6 / 1000);
-      const distance = distanceMeters(risk.center, [supplier.lat, supplier.lng]);
-      expect(distance).toBeGreaterThan(risk.radius + 50_000);
+  it.each([...initialSuppliers, ...replacementSuppliers])("keeps $name strictly outside the heat front", (supplier) => {
+    for (let sample = 0; sample <= 2000; sample++) {
+      const risk = getHeatwaveForecast(sample * HEATWAVE_LAST_DAY / 2000);
+      expect(distanceMeters(risk.center, [supplier.lat, supplier.lng])).toBeGreaterThan(risk.radius + 50_000);
     }
   });
 });

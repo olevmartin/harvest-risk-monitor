@@ -66,9 +66,9 @@ export const riskScenarios: RiskScenario[] = [
 ];
 
 export function getRiskTimeline(id: RiskId) {
-  return id === "rainfall"
-    ? { max: 14, unit: "day" as const, horizon: "Next 14 Days", endLabel: "Day 14" }
-    : { max: 6, unit: "month" as const, horizon: "Next 6 Months", endLabel: "Month 6" };
+  if (id === "rainfall") return { max: 14, unit: "day" as const, horizon: "Next 14 Days", endLabel: "Day 14" };
+  if (id === "heatwave") return { max: 180, unit: "day" as const, horizon: "Next 6 Months", endLabel: "Day 180" };
+  return { max: 6, unit: "month" as const, horizon: "Next 6 Months", endLabel: "Month 6" };
 }
 
 export function getForecastLabel(id: RiskId, value: number) {

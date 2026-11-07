@@ -44,13 +44,13 @@ describe("Risk-specific alternative sourcing", () => {
     expect(pointInSpain(40.42, -3.7)).toBe(true);
     expect(pointInSpain(38.72, -9.14)).toBe(false);
   });
-  it("gives drought a six-month horizon", () => { expect(getRiskTimeline("heatwave")).toMatchObject({ max: 6, unit: "month" }); });
+  it("gives drought a six-month horizon", () => { expect(getRiskTimeline("heatwave")).toMatchObject({ max: 180, unit: "day", horizon: "Next 6 Months" }); });
   it("gives inflation a six-month horizon", () => { expect(getRiskTimeline("economic")).toMatchObject({ max: 6, unit: "month" }); });
   it("gives rainfall a fourteen-day horizon", () => { expect(getRiskTimeline("rainfall")).toMatchObject({ max: 14, unit: "day" }); });
   it("compares a large stockout loss against only the incremental switching cost", () => {
     const risk = riskScenarios[0];
     if (!risk) throw new Error("Missing Finland scenario");
-    const result = getFinancialImpact(risk, risk.suppliers, 6);
+    const result = getFinancialImpact(risk, risk.suppliers, getRiskTimeline(risk.id).max);
     expect(result.baseline).toBe(175_500);
     expect(result.procurement).toBe(180_200);
     expect(result.alternativeExtra).toBe(14_700);
