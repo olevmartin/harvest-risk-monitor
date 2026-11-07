@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, MapPin, Search, Package, Truck, Leaf, Loader2, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, MapPin, Search, Package, Truck, Leaf, Loader2, CheckCircle2, ArrowLeft, RefreshCw } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
@@ -38,20 +38,47 @@ const kpis = [
 
 const DEFICIT_TONS = 450;
 
-const suppliers = [
+const initialSuppliers = [
   { name: "AgroBalt Sp. z o.o.", country: "Poland", region: "Greater Poland", capacity: 220, pricePerTon: 385, leadTime: "4 days" },
   { name: "Vidzemes Graudi SIA", country: "Latvia", region: "Vidzeme", capacity: 150, pricePerTon: 410, leadTime: "3 days" },
   { name: "Saaremaa Agro OÜ", country: "Estonia", region: "Saaremaa", capacity: 120, pricePerTon: 425, leadTime: "2 days" },
+];
+
+const replacementSuppliers = [
+  { name: "Podlasie Zboża Sp. z o.o.", country: "Poland", region: "Podlaskie", capacity: 180, pricePerTon: 398, leadTime: "5 days" },
+  { name: "Zemgale Agro SIA", country: "Latvia", region: "Zemgale", capacity: 160, pricePerTon: 405, leadTime: "3 days" },
+  { name: "Tartu Teravilja OÜ", country: "Estonia", region: "Tartumaa", capacity: 140, pricePerTon: 418, leadTime: "2 days" },
 ];
 
 const formatEur = (n: number) => `€${n.toLocaleString("en-US")}`;
 
 function Index() {
   const [state, setState] = useState<"idle" | "loading" | "resolved">("idle");
+  const [suppliers, setSuppliers] = useState(initialSuppliers);
+  const [swapsUsed, setSwapsUsed] = useState(0);
+  const [loadingCard, setLoadingCard] = useState<number | null>(null);
 
   const findSuppliers = () => {
     setState("loading");
     setTimeout(() => setState("resolved"), 1500);
+  };
+
+  const goBack = () => {
+    setState("idle");
+    setSuppliers(initialSuppliers);
+    setSwapsUsed(0);
+    setLoadingCard(null);
+  };
+
+  const findNew = (index: number) => {
+    setLoadingCard(index);
+    setTimeout(() => {
+      setSuppliers((prev) =>
+        prev.map((s, i) => (i === index ? replacementSuppliers[(swapsUsed + i) % replacementSuppliers.length] : s)),
+      );
+      setSwapsUsed((n) => n + 1);
+      setLoadingCard(null);
+    }, 1200);
   };
 
   const totalCapacity = suppliers.reduce((s, x) => s + x.capacity, 0);
@@ -94,39 +121,61 @@ function Index() {
 
         {state === "resolved" && (
           <section className="rounded-lg border bg-card p-5">
-            <div className="mb-4 flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
-              <div>
-                <h2 className="font-semibold text-foreground">Alternative suppliers found — unaffected by the heatwave</h2>
-                <p className="text-sm text-muted-foreground">
-                  Combined capacity of {totalCapacity} t covers the {DEFICIT_TONS} t deficit. Estimated replacement cost:{" "}
-                  <span className="font-semibold text-foreground">{formatEur(totalCost)}</span>
-                </p>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
+                <div>
+                  <h2 className="font-semibold text-foreground">Alternative suppliers found — unaffected by the heatwave</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Combined capacity of {totalCapacity} t covers the {DEFICIT_TONS} t deficit. Estimated replacement cost:{" "}
+                    <span className="font-semibold text-foreground">{formatEur(totalCost)}</span>
+                  </p>
+                </div>
               </div>
+              <Button variant="outline" size="sm" className="shrink-0" onClick={goBack}>
+                <ArrowLeft /> Go back
+              </Button>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
-              {suppliers.map((s) => (
-                <div key={s.name} className="rounded-lg border p-4">
-                  <div className="font-semibold text-foreground">{s.name}</div>
-                  <div className="text-sm text-muted-foreground">{s.region}, {s.country}</div>
-                  <dl className="mt-3 space-y-1.5 text-sm">
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Capacity</dt>
-                      <dd className="font-medium text-foreground">{s.capacity} t</dd>
+              {suppliers.map((s, i) => (
+                <div key={s.name} className="flex flex-col rounded-lg border p-4">
+                  {loadingCard === i ? (
+                    <div className="flex flex-1 items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Finding a new supplier…
                     </div>
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Price</dt>
-                      <dd className="font-medium text-foreground">{formatEur(s.pricePerTon)}/t</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Lead time</dt>
-                      <dd className="font-medium text-foreground">{s.leadTime}</dd>
-                    </div>
-                    <div className="flex justify-between border-t pt-1.5">
-                      <dt className="text-muted-foreground">Subtotal</dt>
-                      <dd className="font-semibold text-foreground">{formatEur(s.capacity * s.pricePerTon)}</dd>
-                    </div>
-                  </dl>
+                  ) : (
+                    <>
+                      <div className="font-semibold text-foreground">{s.name}</div>
+                      <div className="text-sm text-muted-foreground">{s.region}, {s.country}</div>
+                      <dl className="mt-3 space-y-1.5 text-sm">
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Capacity</dt>
+                          <dd className="font-medium text-foreground">{s.capacity} t</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Price</dt>
+                          <dd className="font-medium text-foreground">{formatEur(s.pricePerTon)}/t</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Lead time</dt>
+                          <dd className="font-medium text-foreground">{s.leadTime}</dd>
+                        </div>
+                        <div className="flex justify-between border-t pt-1.5">
+                          <dt className="text-muted-foreground">Subtotal</dt>
+                          <dd className="font-semibold text-foreground">{formatEur(s.capacity * s.pricePerTon)}</dd>
+                        </div>
+                      </dl>
+                    </>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-3 self-end"
+                    onClick={() => findNew(i)}
+                    disabled={loadingCard !== null}
+                  >
+                    <RefreshCw /> Find new
+                  </Button>
                 </div>
               ))}
             </div>
