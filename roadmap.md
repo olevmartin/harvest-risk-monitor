@@ -1,8 +1,7 @@
 # Roadmap
 
-- [x] Fix typecheck error in index.tsx (replacementSuppliers index possibly undefined)
-- [x] Replace map placeholder with react-leaflet + OpenStreetMap map centered on Turku
-  - Red semi-transparent circle over Southwest Finland in alert state
-  - Hide circle and show 3 green supplier markers (EE/LV/PL) when alternatives shown
-- [x] Verify build clean + map renders in preview
-- [x] Commit
+- [x] Add and verify the Today–Day 10 forecast and safe suppliers.
+- [x] Redesign as a two-column dashboard with a scrollable AI Risk Detection Feed.
+- [x] Add Finland heatwave, Poland rainfall, and Spain economic risk selection with matching data and solutions.
+- [x] Replace circles with persistent simulated radar tile overlays and Spain logistics visuals.
+- [x] Verify supplier safety, timeline movement, alert switching, and desktop/mobile interactions; save changes.

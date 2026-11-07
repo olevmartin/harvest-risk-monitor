@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Keep forecast geometry and mock supplier data in a browser-safe shared module so map rendering and safety tests use the same coordinates without importing Leaflet into SSR.
+- Load the Leaflet map lazily behind ClientOnly; keep its forecast control outside the map so it is accessible during loading and does not intercept map gestures.
+- Define risk scenarios centrally, and key scenario views by risk ID to cancel pending supplier searches and reset selections when switching alerts.
+- Render mock weather as deterministic georeferenced canvas GridLayer tiles with a bounded forecast footprint; supplier safety tests validate every scenario against that same footprint.
+- Allocate replacement quantities up to the required deficit before calculating costs; spare supplier capacity is not charged.

@@ -47,6 +47,7 @@
   --color-critical: var(--critical);
   --color-critical-foreground: var(--critical-foreground);
   --color-critical-soft: var(--critical-soft);
+  --color-safe-supplier: var(--safe-supplier);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
@@ -70,6 +71,13 @@
   --critical: oklch(0.55 0.22 27);
   --critical-foreground: oklch(0.99 0 0);
   --critical-soft: oklch(0.97 0.02 20);
+  --safe-supplier: oklch(0.55 0.16 150);
+  --radar-heat-low: oklch(0.84 0.18 80);
+  --radar-heat-mid: oklch(0.71 0.21 48);
+  --radar-heat-high: oklch(0.53 0.24 27);
+  --radar-rain-low: oklch(0.8 0.12 225);
+  --radar-rain-mid: oklch(0.55 0.24 264);
+  --radar-rain-high: oklch(0.44 0.25 305);
   --background: oklch(0.968 0.007 247.896);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -105,6 +113,7 @@
 }
 
 .dark {
+  --safe-supplier: oklch(0.72 0.17 150);
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);
@@ -148,4 +157,19 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+}
+
+.leaflet-overlay-pane .economic-risk-zone,
+.leaflet-overlay-pane .disrupted-route {
+  stroke: var(--critical);
+  fill: var(--critical);
+}
+
+.leaflet-overlay-pane .expensive-route { stroke: var(--radar-heat-mid); }
+.radar-heat-scale { background: linear-gradient(to right, var(--radar-heat-low), var(--radar-heat-mid), var(--radar-heat-high)); }
+.radar-rain-scale { background: linear-gradient(to right, var(--radar-rain-low), var(--radar-rain-mid), var(--radar-rain-high)); }
+
+.leaflet-overlay-pane .safe-supplier-marker {
+  stroke: var(--safe-supplier);
+  fill: var(--safe-supplier);
 }
