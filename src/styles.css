@@ -47,6 +47,8 @@
   --color-critical: var(--critical);
   --color-critical-foreground: var(--critical-foreground);
   --color-critical-soft: var(--critical-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-safe-supplier: var(--safe-supplier);
   --color-financial-baseline: var(--financial-baseline);
   --color-input: var(--input);
@@ -80,23 +82,25 @@
   --radar-rain-low: oklch(0.8 0.12 225);
   --radar-rain-mid: oklch(0.55 0.24 264);
   --radar-rain-high: oklch(0.44 0.25 305);
-  --background: oklch(0.968 0.007 247.896);
-  --foreground: oklch(0.129 0.042 264.695);
+  --warning: oklch(0.65 0.15 80);
+  --warning-soft: oklch(0.96 0.04 90);
+  --background: oklch(0.975 0.005 145);
+  --foreground: oklch(0.27 0.025 150);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.27 0.025 150);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.45 0.15 250);
+  --primary: oklch(0.45 0.13 148);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.52 0.02 150);
+  --accent: oklch(0.95 0.025 145);
   --accent-foreground: oklch(0.208 0.042 265.755);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
+  --border: oklch(0.9 0.015 145);
   --input: oklch(0.929 0.013 255.508);
   --ring: oklch(0.704 0.04 256.788);
   --chart-1: oklch(0.646 0.222 41.116);
@@ -115,6 +119,8 @@
 }
 
 .dark {
+  --warning: oklch(0.8 0.13 80);
+  --warning-soft: oklch(0.3 0.04 80);
   --financial-baseline: oklch(0.72 0.015 250);
   --safe-supplier: oklch(0.72 0.17 150);
   --background: oklch(0.129 0.042 264.695);
@@ -157,6 +163,7 @@
   }
 
   body {
+    font-family: "Manrope", sans-serif;
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
@@ -176,3 +183,7 @@
   stroke: var(--safe-supplier);
   fill: var(--safe-supplier);
 }
+
+.leaflet-overlay-pane .affected-farm-marker { stroke: var(--card); fill: var(--critical); cursor: pointer; }
+.apetit-wordmark { font-family: Georgia, serif; font-style: italic; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }

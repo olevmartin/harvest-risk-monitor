@@ -35,3 +35,4 @@ use the editor.
 - Render mock weather as deterministic georeferenced canvas GridLayer tiles with a bounded forecast footprint; supplier safety tests validate every scenario against that same footprint.
 - Allocate replacement quantities up to the required deficit before calculating costs; spare supplier capacity is not charged.
 - Keep risk-specific horizon units and financial projections in the browser-safe scenario module so timelines, maps, ROI charts, and safety tests share a single source of truth; alternative logistics bars represent incremental costs, not full procurement spend.
+- Keep crop filters, evidence, affected-farm locations, and farmer-support projections in a browser-safe intelligence module; the dashboard simulates proposals without submitting or persisting real-world actions.

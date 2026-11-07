@@ -1,5 +1,9 @@
 # Roadmap
 
+- [x] Adapt dashboard to Apetit with six crop filters, categorized alerts, and map-driven analysis.
+- [x] Add explicitly simulated source evidence and farmer-first actions with benefit and ROI estimates.
+- [x] Verify filtering, map selection, timelines, actions, and desktop/mobile layouts.
+
 - [x] Update selected-risk horizons to six months / fourteen days with synchronized radar and transport projections.
 - [x] Replace yield lines with risk-specific financial cost and ROI bars; keep tailored sourcing and live swap calculations.
 - [x] Verify all forecast horizons, safe suppliers, risk switching, and desktop/mobile views.
