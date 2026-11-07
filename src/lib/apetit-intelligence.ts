@@ -85,3 +85,21 @@ export function getSupportImpact(alert: IntelligenceAlert, action: SupportAction
   const netBenefit = protectedValue - action.cost;
   return { unresolved, protectedValue, residualLoss: unresolved - protectedValue, cost: action.cost, netBenefit, roi: Math.round(netBenefit / action.cost * 100) };
 }
+export interface Tradeoff { ghgTons: number; ghgNote: string; nature: string; }
+/** Illustrative SBTi (GHG) and SBTN (nature) trade-offs per proposal; demo estimates only. */
+export const actionTradeoffs: Record<string, Tradeoff> = {
+  "harvest-schedule": { ghgTons: 1.8, ghgNote: "extra machinery & cold-chain hours", nature: "-10% Soil Compaction Risk (earlier, drier harvest)" },
+  irrigation: { ghgTons: 4.2, ghgNote: "diesel pumps & water transport", nature: "+8% Freshwater Withdrawal (river abstraction)" },
+  harvest: { ghgTons: 2.6, ghgNote: "shared machinery relocation", nature: "-12% Soil Erosion Risk (avoids wet-field harvest)" },
+  storage: { ghgTons: 5.1, ghgNote: "longer flood-avoiding routes", nature: "-15% Food Waste & Runoff Risk" },
+  buffer: { ghgTons: 0.4, ghgNote: "no logistics change", nature: "Neutral (existing practices maintained)" },
+  loads: { ghgTons: -3.4, ghgNote: "fewer, fuller trucks", nature: "-5% Air Pollution Exposure on corridors" },
+  "fertilizer-buffer": { ghgTons: 6.3, ghgNote: "fertilizer production & Baltic shipping", nature: "-15% Eutrophication Risk (agronomic rate checks)" },
+  machinery: { ghgTons: 1.2, ghgNote: "equipment transfers between farms", nature: "-8% Soil Compaction Risk" },
+  scouting: { ghgTons: 0.3, ghgNote: "agronomist field visits", nature: "-20% Pesticide Load (threshold-based IPM)" },
+};
+export const climateScenarios = [
+  { id: "baseline", label: "Baseline (Current Emissions)", exposureFactor: 0.6 },
+  { id: "ssp585", label: "SSP5-8.5 (Fossil-Fueled Development)", exposureFactor: 1 },
+] as const;
+export type ClimateScenarioId = typeof climateScenarios[number]["id"];

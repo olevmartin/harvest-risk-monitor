@@ -1,11 +1,12 @@
 import { lazy, Suspense, useState } from "react";
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
-import { Leaf, Bell, ChevronRight, MapPin, ShieldCheck, Droplets, TrendingUp, Truck, Bug, Globe2, ArrowUpRight, X, Check, FileCheck2, Sprout, Loader2, Database } from "lucide-react";
+import { Leaf, Bell, ChevronRight, MapPin, ShieldCheck, Droplets, TrendingUp, Truck, Bug, Globe2, ArrowUpRight, X, Check, FileCheck2, Sprout, Loader2, Database, Info, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ForecastTimeline } from "@/components/ForecastTimeline";
 import { SupportFinancialImpact, money } from "@/components/SupportFinancialImpact";
-import { crops, filterAlerts, getSupportImpact, type Crop, type Category, type IntelligenceAlert } from "@/lib/apetit-intelligence";
+import { crops, filterAlerts, getSupportImpact, type Crop, type Category, type IntelligenceAlert, actionTradeoffs, climateScenarios, type ClimateScenarioId } from "@/lib/apetit-intelligence";
 import { getRiskTimeline } from "@/lib/risk-scenarios";
 import fields from "@/assets/finnish-fields.jpg";
 
@@ -62,6 +63,8 @@ function Workspace({ alert }: { alert: IntelligenceAlert }) {
   const [panelOpen, setPanelOpen] = useState(true);
   const [selectedActionId, setSelectedActionId] = useState(alert.actions[0]?.id);
   const [planned, setPlanned] = useState<string[]>([]);
+  const [scenario, setScenario] = useState<ClimateScenarioId>("ssp585");
+  const exposureFactor = climateScenarios.find(item => item.id === scenario)?.exposureFactor ?? 1;
   const action = alert.actions.find(item => item.id === selectedActionId) ?? alert.actions[0];
   if (!action) return null;
   const timeline = getRiskTimeline(alert.mapRisk);
@@ -71,12 +74,17 @@ function Workspace({ alert }: { alert: IntelligenceAlert }) {
     <div className="flex flex-wrap items-end justify-between gap-4 border-b px-5 py-5 sm:px-7"><div><div className="mb-2 flex items-center gap-2 text-[10px] text-muted-foreground"><span>Intelligence workspace</span><ChevronRight className="h-3 w-3" /><span>{alert.category}</span></div><h1 className="text-xl font-bold">Risk & harvest overview</h1><p className="mt-1 text-xs text-muted-foreground">{alert.region} · {timeline.horizon}</p></div><span className="flex items-center gap-1.5 text-[10px] text-primary"><Leaf className="h-3.5 w-3.5" />Local growers. Long-term resilience.</span></div>
     <div className={`grid min-w-0 ${panelOpen ? "xl:grid-cols-[minmax(0,1fr)_330px]" : "grid-cols-1"}`}>
       <div className="min-w-0 space-y-5 p-5 sm:p-7">
-        <div className="grid grid-cols-3 gap-3 border-b pb-5"><Metric label="Partner farms affected" value={String(alert.farmers)} /><Metric label="Potential risk exposure" value={money(impact.unresolved)} critical /><Metric label="Affected crops" value={String(alert.crops.length)} /></div>
+        <div className="grid grid-cols-3 gap-3 border-b pb-5"><Metric label="Partner farms affected" value={String(alert.farmers)} /><Metric label="Potential risk exposure" value={money(Math.round(impact.unresolved * exposureFactor))} critical /><Metric label="Affected crops" value={String(alert.crops.length)} /></div>
         <section aria-label="Risk map"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="text-sm font-bold">Predictive Risk Navigator</h2><Button variant="ghost" size="sm" onClick={() => setPanelOpen(true)} className="h-7 px-2 text-[10px]"><Icon className="h-3 w-3" />{alert.category} analysis<ArrowUpRight className="h-3 w-3" /></Button></div>
           <div className="map-frame relative h-[390px] overflow-hidden rounded-md border sm:h-[440px]">
             <ClientOnly fallback={<MapLoading />}><Suspense fallback={<MapLoading />}><SupplierMap riskId={alert.mapRisk} day={day} suppliers={emptySuppliers} alert={alert} onRiskClick={() => setPanelOpen(true)} /></Suspense></ClientOnly>
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground"><span className="flex items-center gap-2"><span className={`h-2 w-12 rounded-sm ${alert.overlay === "radar" ? alert.mapRisk === "heatwave" ? "radar-heat-scale" : "radar-rain-scale" : "bg-critical"}`} />{alert.overlay === "radar" ? alert.mapRisk === "heatwave" ? "Heat / drought intensity" : "Rainfall intensity" : "Affected farms / routes"}</span><span>Simulated projection · Not live data</span></div>
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-md border border-control-dark-border bg-control-dark p-3">
+            <label htmlFor="ipcc-scenario" className="text-[10px] font-bold uppercase tracking-wide text-control-dark-foreground">Scientific Climate Scenario (IPCC)</label>
+            <select id="ipcc-scenario" value={scenario} onChange={event => setScenario(event.target.value as ClimateScenarioId)} className="h-8 min-w-0 flex-1 rounded-md border border-control-dark-border bg-control-dark px-2 text-xs text-control-dark-foreground">{climateScenarios.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select>
+            <span className="text-[10px] text-control-dark-foreground/70">{scenario === "ssp585" ? "Drives the heatwave anomaly" : "Exposure scaled to 60% of SSP5-8.5"}</span>
+          </div>
           <ForecastTimeline riskId={alert.mapRisk} day={day} onDayChange={setDay} />
         </section>
         <SupportFinancialImpact alert={alert} action={action} period={day} />
@@ -90,13 +98,18 @@ function Workspace({ alert }: { alert: IntelligenceAlert }) {
           <h5 className="mt-4 flex items-center gap-1.5 text-[10px] font-bold uppercase text-muted-foreground"><Database className="h-3 w-3 text-primary" />Data Sources Used</h5>
           <TooltipProvider delayDuration={150}><div className="mt-2 flex flex-wrap gap-1.5">{alert.dataSources.map(dataSource => <Tooltip key={dataSource.name}><TooltipTrigger asChild><span tabIndex={0} className="cursor-help rounded-full border bg-accent px-2 py-1 text-[9px] font-bold text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring">{dataSource.name}</span></TooltipTrigger><TooltipContent side="top" className="max-w-[220px] bg-popover text-popover-foreground border"><span className="block text-[9px] font-bold uppercase text-muted-foreground">{dataSource.type}</span><span className="mt-1 block text-[10px] leading-4">{dataSource.detail}</span></TooltipContent></Tooltip>)}</div></TooltipProvider>
           <span className="mt-2 block text-[9px] font-bold uppercase text-warning">Simulated evidence · Unverified</span></section>
-        <div className="mt-5 flex items-center justify-between"><h4 className="text-xs font-bold">Farmer-first proposals</h4><ShieldCheck className="h-4 w-4 text-primary" /></div>
+        <div className="mt-5 flex items-center justify-between"><h4 className="flex items-center gap-1.5 text-xs font-bold">Farmer-first proposals<TooltipProvider delayDuration={100}><Tooltip><TooltipTrigger asChild><button type="button" aria-label="Traceability & Sources" className="inline-flex items-center gap-1 rounded-full border border-primary px-1.5 py-0.5 text-[9px] font-bold text-primary"><Info className="h-3 w-3" />Traceability & Sources</button></TooltipTrigger><TooltipContent side="top" className="max-w-[240px] border bg-popover text-[10px] leading-4 text-popover-foreground">Data fused from FMI Open Data, Copernicus Soil Moisture, and Apetit Automated Group-wide GHG Calculations.</TooltipContent></Tooltip></TooltipProvider></h4><ShieldCheck className="h-4 w-4 text-primary" /></div>
         <div className="mt-3 space-y-3">{alert.actions.map(proposal => { const current = proposal.id === action.id; const projection = getSupportImpact(alert, proposal, day); const isPlanned = planned.includes(proposal.id); return <article key={proposal.id} className={`rounded-md border p-3 ${current ? "border-primary bg-accent/40" : "bg-card"}`}>
           <Button variant="ghost" className="h-auto w-full justify-start whitespace-normal p-0 text-left text-xs font-bold hover:bg-transparent" aria-pressed={current} onClick={() => setSelectedActionId(proposal.id)}><span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${current ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{current && <Check className="h-3 w-3" />}</span>{proposal.title}</Button>
-          <p className="mt-2 text-[10px] leading-5 text-muted-foreground">{proposal.detail}</p><p className="mt-3 text-[11px] font-semibold text-primary">{proposal.benefit}</p><dl className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-[10px]"><div><dt className="text-muted-foreground">Estimated cost</dt><dd className="mt-1 font-bold">{money(proposal.cost)}</dd></div><div><dt className="text-muted-foreground">Protected loss</dt><dd className="mt-1 font-bold">{money(projection.protectedValue)}</dd></div></dl>
+          <p className="mt-2 text-[10px] leading-5 text-muted-foreground">{proposal.detail}</p><p className="mt-3 text-[11px] font-semibold text-primary">{proposal.benefit}</p><dl className="mt-3 grid grid-cols-2 gap-2 border-t pt-3 text-[10px]"><div><dt className="text-muted-foreground">Estimated cost</dt><dd className="mt-1 font-bold">{money(proposal.cost)}</dd></div><div><dt className="text-muted-foreground">Protected loss</dt><dd className="mt-1 font-bold">{money(projection.protectedValue)}</dd></div></dl>{(() => { const t = actionTradeoffs[proposal.id]; if (!t) return null; return <ul aria-label="Trade-off analysis" className="mt-3 space-y-1.5 text-[10px] leading-4">
+            <li className="rounded border border-primary/30 bg-accent px-2 py-1"><span className="font-bold text-primary">Financial · </span>Cost: {money(proposal.cost)} ({money(projection.protectedValue)} Yield Saved)</li>
+            <li className={`rounded border px-2 py-1 ${t.ghgTons > 0 ? "border-warning/40 bg-warning/10 text-warning" : "border-primary/30 bg-accent text-primary"}`}><span className="font-bold">SBTi · GHG Impact: </span>{t.ghgTons > 0 ? "+" : ""}{t.ghgTons} Tons CO2e (Due to {t.ghgNote})</li>
+            <li className="rounded border px-2 py-1 text-foreground"><span className="font-bold text-primary">SBTN · Nature: </span>{t.nature}</li>
+          </ul>; })()}
           <Button size="sm" variant={isPlanned ? "outline" : current ? "default" : "outline"} className="mt-3 h-8 w-full text-[10px]" onClick={() => { setSelectedActionId(proposal.id); setPlanned(previous => isPlanned ? previous.filter(id => id !== proposal.id) : [...previous, proposal.id]); }}>{isPlanned ? <Check className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}{isPlanned ? "Remove from draft plan" : "Add to draft plan"}</Button>
         </article>; })}</div>
         {planned.length > 0 && <div role="status" className="mt-4 border-l-2 border-primary bg-accent p-3 text-[11px] leading-5"><strong>{planned.length} proposal{planned.length > 1 ? "s" : ""} in draft.</strong> Farmer approval and operational review required. Nothing has been dispatched.</div>}
+        <Button size="lg" className="mt-4 h-11 w-full text-xs font-bold shadow-md" onClick={() => toast.success("Scenario Logged. Data sources and GHG estimations attached for auditor review.")}><Send className="h-4 w-4" />Submit for Expert Review (CSRD & SBTi)</Button>
         <p className="mt-4 text-[10px] leading-5 text-muted-foreground">Draft selections last for this view only. Proposals are compared individually; benefits are not additive.</p>
       </aside>}
     </div>
