@@ -13,3 +13,8 @@
 - [x] Add Finland heatwave, Poland rainfall, and Spain economic risk selection with matching data and solutions.
 - [x] Replace circles with persistent simulated radar tile overlays and Spain logistics visuals.
 - [x] Verify supplier safety, timeline movement, alert switching, and desktop/mobile interactions; save changes.
+
+- [x] Animate radar fronts with a play/pause forecast timeline control.
+- [x] Add "Data Sources Used" badges with tooltips citing FMI, Copernicus, Frogcast, Fintraffic, MarineTraffic, and Trading Economics.
+- [x] Rework financial panel into a three-metric cost-benefit view (historical risk, AI solution cost, remaining risk).
+- [x] Build the concrete Southwest Finland heatwave demo scenario (harvest +3 days, €15,000 irrigation subsidies, €200,000 saved).
